@@ -1,4 +1,4 @@
-name: Manual Bot Host
+name: Secure Bot Host
 on: workflow_dispatch
 
 jobs:
@@ -8,11 +8,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python & Tools
+      - name: Connect to My Private Network
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Install Python & Roblox
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-pip xvfb
+          sudo apt-get install -y python3-pip xvfb
           pip install roblox requests
 
-      - name: Start Interactive Screen (Upterm)
-        uses: owenthereal/action-upterm@v1
+      - name: Wait for You to Connect
+        run: sleep 6h
