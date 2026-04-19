@@ -14,5 +14,8 @@ jobs:
           sudo apt-get install -y python3 python3-pip xvfb
           pip install roblox requests
 
+      - name: Generate Temporary SSH Key
+        run: ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
+
       - name: Start Interactive Screen
         uses: mxschmitt/action-tmate@v3
