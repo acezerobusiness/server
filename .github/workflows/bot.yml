@@ -1,4 +1,4 @@
-name: Secure Bot Host
+name: Cloudflare Bot Host
 on: workflow_dispatch
 
 jobs:
@@ -8,16 +8,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Connect to My Private Network
-        uses: tailscale/github-action@v3
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: Install Python & Roblox
+      - name: Install Python & Screen Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip xvfb
           pip install roblox requests
 
-      - name: Wait for You to Connect
-        run: sleep 6h
+      - name: Start Cloudflare Tunnel
+        run: |
+          # Download the Cloudflare Tunnel tool
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+          
+          # Start a "Quick Tunnel" (Free & No Login Required)
+          # This will give you a temporary URL in the logs
+          cloudflared tunnel --url http://localhost:8080 &
+          
+          # Start a web-based terminal on port 8080
+          # This allows you to see the "screen" in your browser
+          docker run -p 8080:7681 -d tsl0922/ttyd bash
+          
+          echo "Look for the 'cloudflare.com' link in the logs below!"
+          sleep 6h
