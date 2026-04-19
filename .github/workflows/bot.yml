@@ -1,0 +1,22 @@
+name: Manual Bot Host
+on: workflow_dispatch
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python & Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip xvfb
+          # This installs basic roblox python library immediately
+          pip install roblox requests
+
+      - name: Start Interactive Screen
+        uses: mxschmitt/action-tmate@v3
+        with:
+          # Only YOU can access the link when logged into GitHub
+          limit-access-to-actor: true
