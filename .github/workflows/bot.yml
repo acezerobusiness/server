@@ -1,11 +1,11 @@
-name: Tailscale Password Host
+name: Secure Roblox Host 2026
 on: workflow_dispatch
 
 jobs:
   host:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Connect Tailscale
@@ -13,19 +13,28 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
-      - name: Set Password & Enable SSH
+      - name: Setup SSH and Password
         env:
           RPASS: ${{ secrets.RUNNER_PASSWORD }}
         run: |
-          # 1. Set the password for the 'runner' user
+          # Set the password for the 'runner' user
           echo "runner:$RPASS" | sudo chpasswd
           
-          # 2. Configure SSH to allow password login
+          # Force SSH to use Port 443 (Bypasses most 'Timed Out' errors)
+          sudo sed -i 's/#Port 22/Port 443/' /etc/ssh/sshd_config
           sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
           
-          # 3. Tell Tailscale to allow SSH
+          # Enable Tailscale SSH
           sudo tailscale set --ssh
           
-          echo "Ready! Use your password to connect."
-          sleep 6h
+          echo "Machine is ready on Port 443!"
+
+      - name: Install Python & Roblox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip xvfb
+          pip install roblox requests
+
+      - name: Keep Alive
+        run: sleep 6h
