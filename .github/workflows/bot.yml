@@ -1,4 +1,4 @@
-name: Cloudflare Bot Host
+name: Tailscale Password Host
 on: workflow_dispatch
 
 jobs:
@@ -8,25 +8,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python & Screen Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip xvfb
-          pip install roblox requests
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
-      - name: Start Cloudflare Tunnel
+      - name: Set Password & Enable SSH
+        env:
+          RPASS: ${{ secrets.RUNNER_PASSWORD }}
         run: |
-          # Download the Cloudflare Tunnel tool
-          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared.deb
+          # 1. Set the password for the 'runner' user
+          echo "runner:$RPASS" | sudo chpasswd
           
-          # Start a "Quick Tunnel" (Free & No Login Required)
-          # This will give you a temporary URL in the logs
-          cloudflared tunnel --url http://localhost:8080 &
+          # 2. Configure SSH to allow password login
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
           
-          # Start a web-based terminal on port 8080
-          # This allows you to see the "screen" in your browser
-          docker run -p 8080:7681 -d tsl0922/ttyd bash
+          # 3. Tell Tailscale to allow SSH
+          sudo tailscale set --ssh
           
-          echo "Look for the 'cloudflare.com' link in the logs below!"
+          echo "Ready! Use your password to connect."
           sleep 6h
